@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoftHub - 专业软件下载平台</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --pending: #f1c40f;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #1a1a2e;
+            color: var(--light);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* 导航栏样式 */
+        header {
+            background-color: rgba(26, 26, 46, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--light);
+            cursor: pointer;
+        }
+        
+        .logo i {
+            color: var(--primary);
+            margin-right: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 30px;
+        }
+        
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 8px 15px;
+            width: 300px;
+        }
+        
+        .search-bar input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--light);
+            width: 100%;
+            padding: 5px 10px;
+        }
+        
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-area button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .user-area button:hover {
+            background: #2980b9;
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #1e2a3a;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            font-size: 1.8rem;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--light);
+            font-size: 1rem;
+        }
+        
+        .form-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        
+        .form-submit:hover {
+            background: #2980b9;
+        }
+        
+        .form-switch {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .form-switch a {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* 页面样式 */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* 英雄区域样式 */
+        .hero {
+            padding: 100px 0;
+            text-align: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary), #9b59b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            color: var(--gray);
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.6);
+        }
+        
+        /* 分类区域样式 */
+        .categories {
+            padding: 80px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+            font-size: 2.2rem;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .category-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .category-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .category-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        /* 软件网格样式 */
+        .software-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 80px 0;
+        }
+        
+        .software-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .software-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .software-img {
+            height: 180px;
+            background: linear-gradient(45deg, #3498db, #9b59b6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: white;
+        }
+        
+        .software-info {
+            padding: 20px;
+        }
+        
+        .software-info h3 {
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+        }
+        
+        .software-info p {
+            color: var(--gray);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .software-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .download-btn {
+            display: block;
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .download-btn:hover {
+            background: #2980b9;
+        }
+
+        /* 状态标签 */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .status-pending {
+            background: var(--pending);
+            color: #333;
+        }
+        
+        .status-approved {
+            background: var(--success);
+            color: white;
+        }
+
+        /* 评分样式 */
+        .star-rating {
+            display: flex;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        
+        .star-rating .star {
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        .star-rating .star.active {
+            color: var(--warning);
+        }
+
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+        
+        .action-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        .action-btn.approve {
+            background: var(--success);
+        }
+        
+        .action-btn.reject {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo" onclick="showPage('home')">
+                    <i class="fas fa-download"></i>
+                    SoftHub
+                </div>
+                <ul class="nav-links">
+                    <li><a onclick="showPage('home')">首页</a></li>
+                    <li><a onclick="showPage('categories')">软件分类</a></li>
+                    <li><a onclick="showPage('featured')">热门下载</a></li>
+                    <li><a onclick="showPage('admin')" class="admin-link" style="display: none;">管理面板</a></li>
+                </ul>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="搜索软件...">
+                </div>
+                <div class="user-area">
+                    <span id="user-name" style="display: none;"></span>
+                    <button id="login-btn" onclick="showModal('login-modal')">登录</button>
+                    <button id="register-btn" onclick="showModal('register-modal')">注册</button>
+                    <button id="upload-btn" style="display: none;" onclick="showModal('upload-modal')">上传软件</button>
+                    <button id="logout-btn" style="display: none;" onclick="logout()">退出</button>
+                    <button id="profile-btn" style="display: none;" onclick="showPage('profile')">个人中心</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 模态框 -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>用户登录</h2>
+                <button class="close-modal" onclick="hideAllModals()">&times;</button>
+            </div>
+            <form id="login-form" onsubmit="event.preventDefault(); login();">
+                <div class="form-group">
+                    <label for="login-username">用户名</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">密码</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="form-submit">登录</button>
+                <div class="form-switch">
+                    还没有账号？<a onclick="switchToRegister()">立即注册</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>用户注册</h2>
+                <button class="close-modal" onclick="hideAllModals()">&times;</button>
+            </div>
+            <form id="register-form" onsubmit="event.preventDefault(); register();">
+                <div class="form-group">
+                    <label for="register-username">用户名</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">邮箱</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">密码</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">确认密码</label>
+                    <input type="password" id="register-confirm-password" required>
+                </div>
+                <button type="submit" class="form-submit">注册</button>
+                <div class="form-switch">
+                    已有账号？<a onclick="switchToLogin()">立即登录</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>上传软件</h2>
+                <button class="close-modal" onclick="hideAllModals()">&times;</button>
+            </div>
+            <form id="upload-form" onsubmit="event.preventDefault(); uploadSoftware();">
+                <div class="form-group">
+                    <label for="software-name">软件名称</label>
+                    <input type="text" id="software-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="software-description">软件介绍</label>
+                    <textarea id="software-description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="software-category">软件分类</label>
+                    <select id="software-category" required>
+                        <option value="">请选择分类</option>
+                        <option value="development">开发工具</option>
+                        <option value="design">设计创意</option>
+                        <option value="office">办公效率</option>
+                        <option value="game">游戏娱乐</option>
+                        <option value="security">安全防护</option>
+                        <option value="network">网络工具</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="download-url">下载地址</label>
+                    <input type="url" id="download-url" placeholder="GitHub地址或网盘链接" required>
+                </div>
+                <button type="submit" class="form-submit" id="upload-submit-btn">提交审核</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 页面内容 -->
+    <section id="home" class="page active">
+        <div class="hero">
+            <div class="container">
+                <h1>发现优质软件，提升工作效率</h1>
+                <p>SoftHub提供海量正版软件下载，涵盖办公、设计、开发、多媒体等各类别，安全可靠，一键安装</p>
+                <button class="cta-button" onclick="showPage('featured')">立即探索</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="categories" class="page">
+        <div class="container">
+            <h2 class="section-title">软件分类</h2>
+            <div class="category-grid">
+                <div class="category-card" onclick="showPage('featured')">
+                    <div class="category-icon">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <h3>开发工具</h3>
+                    <p>编程、调试、版本控制等开发必备软件</p>
+                </div>
+                <div class="category-card" onclick="showPage('featured')">
+                    <div class="category-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3>设计创意</h3>
+                    <p>图像处理、UI设计、视频编辑等创意工具</p>
+                </div>
+                <div class="category-card" onclick="showPage('featured')">
+                    <div class="category-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3>办公效率</h3>
+                    <p>文档处理、项目管理、效率提升软件</p>
+                </div>
+                <div class="category-card" onclick="showPage('featured')">
+                    <div class="category-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h3>游戏娱乐</h3>
+                    <p>游戏平台、音视频播放、娱乐应用</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="featured" class="page">
+        <div class="container">
+            <h2 class="section-title">热门软件</h2>
+            <div class="software-grid" id="software-list">
+                <!-- 软件列表将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </section>
+
+    <section id="admin" class="page">
+        <div class="container">
+            <h2 class="section-title">管理面板</h2>
+            <div style="margin-bottom: 30px;">
+                <button class="cta-button" onclick="switchAdminTab('pending')">待审核软件</button>
+                <button class="cta-button" onclick="switchAdminTab('users')">用户管理</button>
+                <button class="cta-button" onclick="switchAdminTab('software')">软件管理</button>
+            </div>
+            
+            <div id="pending-tab" class="admin-tab">
+                <h3>待审核软件</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>软件名称</th>
+                            <th>分类</th>
+                            <th>上传者</th>
+                            <th>上传时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-list">
+                        <!-- 待审核列表 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="users-tab" class="admin-tab" style="display: none;">
+                <h3>用户管理</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>邮箱</th>
+                            <th>注册时间</th>
+                            <th>权限</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-list">
+                        <!-- 用户列表 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="software-tab" class="admin-tab" style="display: none;">
+                <h3>软件管理</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>软件名称</th>
+                            <th>分类</th>
+                            <th>上传者</th>
+                            <th>下载量</th>
+                            <th>评分</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-software-list">
+                        <!-- 软件管理列表 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="profile" class="page">
+        <div class="container">
+            <div style="padding: 80px 0;">
+                <h2 class="section-title">个人中心</h2>
+                <div style="display: flex; gap: 30px; margin-bottom: 30px;">
+                    <button class="cta-button" onclick="switchProfileTab('downloads')">已下载软件</button>
+                    <button class="cta-button" onclick="switchProfileTab('ratings')">待评分</button>
+                    <button class="cta-button" onclick="switchProfileTab('uploads')">我的上传</button>
+                </div>
+                
+                <div id="downloads-tab" class="profile-tab">
+                    <h3>已下载软件</h3>
+                    <div id="user-downloads">
+                        <!-- 用户下载的软件 -->
+                    </div>
+                </div>
+                
+                <div id="ratings-tab" class="profile-tab" style="display: none;">
+                    <h3>待评分软件</h3>
+                    <div id="pending-ratings">
+                        <!-- 待评分软件 -->
+                    </div>
+                </div>
+                
+                <div id="uploads-tab" class="profile-tab" style="display: none;">
+                    <h3>我的上传</h3>
+                    <div id="user-uploads">
+                        <!-- 用户上传的软件 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Supabase 配置
+        const SUPABASE_URL = 'https://veqolhnwgaanuoczskah.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlcW9saG53Z2FhbnVvY3pza2FoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyNDU3MTksImV4cCI6MjA3NTgyMTcxOX0.fA-j567UHKG1bs6uWQrXit0WqpiSDIEz_hcHpR52frc';
+        
+        // 初始化 Supabase 客户端
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // 全局数据
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let software = [];
+        let pendingSoftware = [];
+        let users = [];
+        let downloads = [];
+        let ratings = [];
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 页面加载完成，开始初始化...');
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            console.log('🔧 初始化应用...');
+            await loadData();
+            updateUI();
+            renderSoftwareList();
+            console.log('✅ 应用初始化完成');
+        }
+
+        async function loadData() {
+            try {
+                // 加载软件
+                const { data: softwareData } = await supabase.from('software').select('*');
+                software = softwareData || [];
+
+                // 加载待审核软件
+                const { data: pendingData } = await supabase.from('pending_software').select('*');
+                pendingSoftware = pendingData || [];
+
+                // 加载用户
+                const { data: usersData } = await supabase.from('users').select('*');
+                users = usersData || [];
+
+                // 加载下载记录
+                const { data: downloadsData } = await supabase.from('downloads').select('*');
+                downloads = downloadsData || [];
+
+                // 加载评分
+                const { data: ratingsData } = await supabase.from('ratings').select('*');
+                ratings = ratingsData || [];
+
+            } catch (error) {
+                console.error('❌ 加载数据失败:', error);
+            }
+        }
+
+        // 页面导航函数
+        function showPage(pageId) {
+            console.log('📄 切换到页面:', pageId);
+            
+            // 隐藏所有页面
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示目标页面
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                
+                // 如果是管理页面，加载管理数据
+                if (pageId === 'admin' && currentUser && currentUser.is_admin) {
+                    loadAdminData();
+                }
+                // 如果是个人中心，加载个人数据
+                if (pageId === 'profile' && currentUser) {
+                    loadProfileData();
+                }
+                
+                console.log('✅ 页面切换成功');
+            } else {
+                console.error('❌ 页面不存在:', pageId);
+            }
+        }
+
+        // 模态框函数
+        function showModal(modalId) {
+            console.log('🪟 打开模态框:', modalId);
+            hideAllModals();
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+                
+                // 如果是上传模态框，更新按钮文本
+                if (modalId === 'upload-modal') {
+                    const btn = document.getElementById('upload-submit-btn');
+                    if (btn && currentUser && currentUser.is_admin) {
+                        btn.textContent = '直接发布';
+                    }
+                }
+            }
+        }
+
+        function hideAllModals() {
+            console.log('🪟 关闭所有模态框');
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+
+        function switchToRegister() {
+            hideAllModals();
+            showModal('register-modal');
+        }
+
+        function switchToLogin() {
+            hideAllModals();
+            showModal('login-modal');
+        }
+
+        // 用户界面更新
+        function updateUI() {
+            console.log('🎨 更新UI，当前用户:', currentUser);
+            
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const profileBtn = document.getElementById('profile-btn');
+            const uploadBtn = document.getElementById('upload-btn');
+            const userName = document.getElementById('user-name');
+            const adminLink = document.querySelector('.admin-link');
+
+            if (currentUser) {
+                // 用户已登录
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (registerBtn) registerBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                if (profileBtn) profileBtn.style.display = 'inline-block';
+                if (uploadBtn) uploadBtn.style.display = 'inline-block';
+                if (userName) {
+                    userName.textContent = currentUser.username;
+                    userName.style.display = 'inline-block';
+                }
+                if (adminLink && currentUser.is_admin) {
+                    adminLink.style.display = 'block';
+                }
+            } else {
+                // 用户未登录
+                if (loginBtn) loginBtn.style.display = 'inline-block';
+                if (registerBtn) registerBtn.style.display = 'inline-block';
+                if (logoutBtn) logoutBtn.style.display = 'none';
+                if (profileBtn) profileBtn.style.display = 'none';
+                if (uploadBtn) uploadBtn.style.display = 'none';
+                if (userName) userName.style.display = 'none';
+                if (adminLink) adminLink.style.display = 'none';
+            }
+        }
+
+        // 用户功能
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            console.log('🔐 尝试登录:', username);
+            
+            if (!username || !password) {
+                alert('请输入用户名和密码！');
+                return;
+            }
+
+            try {
+                const { data: user, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password)
+                    .single();
+                
+                if (error) {
+                    console.error('❌ 登录错误:', error);
+                    alert('登录失败: ' + error.message);
+                    return;
+                }
+                
+                if (!user) {
+                    alert('用户名或密码错误！');
+                    return;
+                }
+                
+                currentUser = {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    is_admin: user.is_admin
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                updateUI();
+                hideAllModals();
+                await loadData();
+                renderSoftwareList();
+                alert('✅ 登录成功！');
+                
+            } catch (error) {
+                console.error('❌ 登录异常:', error);
+                alert('登录过程中发生错误');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                alert('两次输入的密码不一致！');
+                return;
+            }
+
+            if (!username || !email || !password) {
+                alert('请填写所有必填字段！');
+                return;
+            }
+
+            console.log('📝 尝试注册:', username);
+            
+            try {
+                // 检查用户是否已存在
+                const { data: existingUser } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .single();
+                    
+                if (existingUser) {
+                    alert('用户名已存在！');
+                    return;
+                }
+                
+                // 获取用户数量来判断是否是第一个用户
+                const { data: allUsers } = await supabase.from('users').select('*');
+                const isFirstUser = !allUsers || allUsers.length === 0;
+                
+                const newUser = {
+                    username,
+                    email,
+                    password,
+                    is_admin: isFirstUser,
+                    register_date: new Date().toISOString()
+                };
+                
+                const { data, error } = await supabase
+                    .from('users')
+                    .insert([newUser])
+                    .select();
+                
+                if (error) {
+                    console.error('❌ 注册错误:', error);
+                    alert('注册失败: ' + error.message);
+                    return;
+                }
+                
+                if (isFirstUser) {
+                    alert('🎉 注册成功！您是第一个注册的用户，已自动设置为管理员。');
+                } else {
+                    alert('✅ 注册成功！请登录。');
+                }
+                
+                hideAllModals();
+                showModal('login-modal');
+                
+            } catch (error) {
+                console.error('❌ 注册异常:', error);
+                alert('注册过程中发生错误');
+            }
+        }
+
+        function logout() {
+            console.log('🚪 用户退出登录');
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            updateUI();
+            showPage('home');
+            alert('已退出登录');
+        }
+
+        // 软件功能
+        async function uploadSoftware() {
+            if (!currentUser) {
+                alert('请先登录！');
+                return;
+            }
+
+            const name = document.getElementById('software-name').value;
+            const description = document.getElementById('software-description').value;
+            const category = document.getElementById('software-category').value;
+            const downloadUrl = document.getElementById('download-url').value;
+
+            if (!name || !description || !category || !downloadUrl) {
+                alert('请填写所有字段！');
+                return;
+            }
+
+            // 如果是管理员，直接发布；否则提交审核
+            if (currentUser.is_admin) {
+                // 直接发布到软件表
+                const newSoftware = {
+                    name,
+                    description,
+                    category,
+                    download_url: downloadUrl,
+                    uploader: currentUser.username,
+                    uploader_id: currentUser.id,
+                    downloads: 0,
+                    rating: 0,
+                    rating_count: 0,
+                    upload_date: new Date().toISOString(),
+                    status: 'approved'
+                };
+
+                const { error } = await supabase
+                    .from('software')
+                    .insert([newSoftware]);
+
+                if (error) {
+                    alert('发布失败: ' + error.message);
+                    return;
+                }
+
+                alert('✅ 软件发布成功！');
+            } else {
+                // 提交到待审核表
+                const newPendingSoftware = {
+                    name,
+                    description,
+                    category,
+                    download_url: downloadUrl,
+                    uploader: currentUser.username,
+                    uploader_id: currentUser.id,
+                    upload_date: new Date().toISOString(),
+                    status: 'pending'
+                };
+
+                const { error } = await supabase
+                    .from('pending_software')
+                    .insert([newPendingSoftware]);
+
+                if (error) {
+                    alert('提交审核失败: ' + error.message);
+                    return;
+                }
+
+                alert('✅ 软件已提交审核，请等待管理员审核！');
+            }
+
+            hideAllModals();
+            document.getElementById('upload-form').reset();
+            await loadData();
+            renderSoftwareList();
+        }
+
+        function renderSoftwareList() {
+            const container = document.getElementById('software-list');
+            if (!container) return;
+
+            const approvedSoftware = software.filter(sw => sw.status === 'approved');
+            
+            if (approvedSoftware.length === 0) {
+                container.innerHTML = '<p>暂无软件可下载</p>';
+                return;
+            }
+
+            container.innerHTML = approvedSoftware.map(sw => `
+                <div class="software-card">
+                    <div class="software-img">
+                        <i class="fas fa-${getSoftwareIcon(sw.category)}"></i>
+                    </div>
+                    <div class="software-info">
+                        <h3>${sw.name}</h3>
+                        <p>${sw.description}</p>
+                        <div class="software-meta">
+                            <span><i class="fas fa-download"></i> ${formatDownloadCount(sw.downloads)} 下载</span>
+                            <span><i class="fas fa-star"></i> ${sw.rating || 0}</span>
+                        </div>
+                        <button class="download-btn" onclick="downloadSoftware(${sw.id})">立即下载</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function downloadSoftware(softwareId) {
+            if (!currentUser) {
+                alert('请先登录！');
+                showModal('login-modal');
+                return;
+            }
+
+            const sw = software.find(s => s.id === softwareId);
+            if (sw) {
+                // 增加下载量
+                const { error } = await supabase
+                    .from('software')
+                    .update({ downloads: (sw.downloads || 0) + 1 })
+                    .eq('id', softwareId);
+
+                if (error) {
+                    console.error('更新下载量失败:', error);
+                }
+
+                // 记录下载
+                const downloadRecord = {
+                    user_id: currentUser.id,
+                    software_id: softwareId,
+                    download_date: new Date().toISOString(),
+                    rated: false
+                };
+
+                await supabase.from('downloads').insert([downloadRecord]);
+
+                // 打开下载链接
+                window.open(sw.download_url, '_blank');
+                alert(`开始下载 ${sw.name}`);
+
+                await loadData();
+                renderSoftwareList();
+            }
+        }
+
+        // 管理功能
+        async function loadAdminData() {
+            if (!currentUser || !currentUser.is_admin) return;
+
+            // 加载待审核列表
+            const pendingList = document.getElementById('pending-list');
+            if (pendingList) {
+                pendingList.innerHTML = pendingSoftware.map(sw => `
+                    <tr>
+                        <td>${sw.name}</td>
+                        <td>${getCategoryName(sw.category)}</td>
+                        <td>${sw.uploader}</td>
+                        <td>${new Date(sw.upload_date).toLocaleDateString()}</td>
+                        <td>
+                            <button class="action-btn approve" onclick="approveSoftware(${sw.id})">通过</button>
+                            <button class="action-btn reject" onclick="rejectSoftware(${sw.id})">拒绝</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // 加载用户列表
+            const userList = document.getElementById('user-list');
+            if (userList) {
+                userList.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${new Date(user.register_date).toLocaleDateString()}</td>
+                        <td>${user.is_admin ? '管理员' : '普通用户'}</td>
+                        <td>
+                            ${!user.is_admin ? `<button class="action-btn" onclick="grantAdmin(${user.id})">授权管理员</button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // 加载软件管理列表
+            const softwareList = document.getElementById('admin-software-list');
+            if (softwareList) {
+                softwareList.innerHTML = software.map(sw => `
+                    <tr>
+                        <td>${sw.name}</td>
+                        <td>${getCategoryName(sw.category)}</td>
+                        <td>${sw.uploader}</td>
+                        <td>${formatDownloadCount(sw.downloads)}</td>
+                        <td>${sw.rating || 0}</td>
+                        <td>
+                            <button class="action-btn reject" onclick="deleteSoftware(${sw.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function switchAdminTab(tabName) {
+            // 隐藏所有标签
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // 显示选中的标签
+            const tab = document.getElementById(tabName + '-tab');
+            if (tab) {
+                tab.style.display = 'block';
+            }
+        }
+
+        async function approveSoftware(pendingId) {
+            const sw = pendingSoftware.find(s => s.id === pendingId);
+            if (sw) {
+                // 添加到软件表
+                const approvedSoftware = {
+                    name: sw.name,
+                    description: sw.description,
+                    category: sw.category,
+                    download_url: sw.download_url,
+                    uploader: sw.uploader,
+                    uploader_id: sw.uploader_id,
+                    downloads: 0,
+                    rating: 0,
+                    rating_count: 0,
+                    upload_date: new Date().toISOString(),
+                    status: 'approved'
+                };
+
+                await supabase.from('software').insert([approvedSoftware]);
+                await supabase.from('pending_software').delete().eq('id', pendingId);
+                
+                alert('软件审核通过！');
+                await loadData();
+                loadAdminData();
+                renderSoftwareList();
+            }
+        }
+
+        async function rejectSoftware(pendingId) {
+            await supabase.from('pending_software').delete().eq('id', pendingId);
+            alert('软件已拒绝！');
+            await loadData();
+            loadAdminData();
+        }
+
+        async function grantAdmin(userId) {
+            await supabase.from('users').update({ is_admin: true }).eq('id', userId);
+            alert('用户已授权为管理员！');
+            await loadData();
+            loadAdminData();
+        }
+
+        async function deleteSoftware(softwareId) {
+            if (confirm('确定要删除这个软件吗？')) {
+                await supabase.from('software').delete().eq('id', softwareId);
+                alert('软件已删除！');
+                await loadData();
+                loadAdminData();
+                renderSoftwareList();
+            }
+        }
+
+        // 个人中心功能
+        async function loadProfileData() {
+            if (!currentUser) return;
+
+            // 已下载软件
+            const userDownloads = downloads.filter(d => d.user_id === currentUser.id);
+            const downloadsContainer = document.getElementById('user-downloads');
+            if (downloadsContainer) {
+                downloadsContainer.innerHTML = userDownloads.map(download => {
+                    const sw = software.find(s => s.id === download.software_id);
+                    return sw ? `
+                        <div class="software-card">
+                            <div class="software-img">
+                                <i class="fas fa-${getSoftwareIcon(sw.category)}"></i>
+                            </div>
+                            <div class="software-info">
+                                <h3>${sw.name}</h3>
+                                <p>${sw.description}</p>
+                                <div class="software-meta">
+                                    <span>下载于: ${new Date(download.download_date).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ` : '';
+                }).join('');
+            }
+
+            // 待评分软件
+            const pendingRatings = userDownloads.filter(d => !d.rated);
+            const ratingsContainer = document.getElementById('pending-ratings');
+            if (ratingsContainer) {
+                ratingsContainer.innerHTML = pendingRatings.map(download => {
+                    const sw = software.find(s => s.id === download.software_id);
+                    return sw ? `
+                        <div class="software-card">
+                            <div class="software-img">
+                                <i class="fas fa-${getSoftwareIcon(sw.category)}"></i>
+                            </div>
+                            <div class="software-info">
+                                <h3>${sw.name}</h3>
+                                <p>${sw.description}</p>
+                                <div class="star-rating" id="rating-${download.id}">
+                                    ${[1,2,3,4,5].map(star => `
+                                        <span class="star" onclick="rateSoftware(${download.id}, ${star})">★</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    ` : '';
+                }).join('');
+            }
+
+            // 我的上传
+            const userUploads = software.filter(s => s.uploader_id === currentUser.id);
+            const pendingUploads = pendingSoftware.filter(s => s.uploader_id === currentUser.id);
+            const uploadsContainer = document.getElementById('user-uploads');
+            if (uploadsContainer) {
+                let html = '';
+                
+                if (userUploads.length > 0) {
+                    html += '<h4>已发布的软件</h4>';
+                    html += userUploads.map(sw => `
+                        <div class="software-card">
+                            <div class="software-img">
+                                <i class="fas fa-${getSoftwareIcon(sw.category)}"></i>
+                            </div>
+                            <div class="software-info">
+                                <h3>${sw.name}</h3>
+                                <p>${sw.description}</p>
+                                <div class="software-meta">
+                                    <span><i class="fas fa-download"></i> ${formatDownloadCount(sw.downloads)} 下载</span>
+                                    <span><i class="fas fa-star"></i> ${sw.rating || 0}</span>
+                                </div>
+                                <span class="status-badge status-approved">已发布</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                if (pendingUploads.length > 0) {
+                    html += '<h4>审核中的软件</h4>';
+                    html += pendingUploads.map(sw => `
+                        <div class="software-card">
+                            <div class="software-img">
+                                <i class="fas fa-${getSoftwareIcon(sw.category)}"></i>
+                            </div>
+                            <div class="software-info">
+                                <h3>${sw.name}</h3>
+                                <p>${sw.description}</p>
+                                <span class="status-badge status-pending">审核中</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                uploadsContainer.innerHTML = html || '<p>您还没有上传任何软件</p>';
+            }
+        }
+
+        function switchProfileTab(tabName) {
+            // 隐藏所有标签
+            document.querySelectorAll('.profile-tab').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // 显示选中的标签
+            const tab = document.getElementById(tabName + '-tab');
+            if (tab) {
+                tab.style.display = 'block';
+            }
+        }
+
+        async function rateSoftware(downloadId, rating) {
+            // 更新下载记录的评分状态
+            await supabase.from('downloads').update({ rated: true }).eq('id', downloadId);
+            
+            // 添加评分记录
+            const download = downloads.find(d => d.id === downloadId);
+            if (download) {
+                await supabase.from('ratings').insert([{
+                    user_id: currentUser.id,
+                    software_id: download.software_id,
+                    rating: rating,
+                    rating_date: new Date().toISOString()
+                }]);
+
+                // 重新计算软件评分
+                const softwareRatings = ratings.filter(r => r.software_id === download.software_id);
+                const totalRating = softwareRatings.reduce((sum, r) => sum + r.rating, 0) + rating;
+                const newRatingCount = softwareRatings.length + 1;
+                const newAverageRating = (totalRating / newRatingCount).toFixed(1);
+
+                await supabase.from('software').update({ 
+                    rating: newAverageRating,
+                    rating_count: newRatingCount
+                }).eq('id', download.software_id);
+
+                alert('评分提交成功！');
+                await loadData();
+                loadProfileData();
+                renderSoftwareList();
+            }
+        }
+
+        // 工具函数
+        function getSoftwareIcon(category) {
+            const icons = {
+                development: 'laptop-code',
+                design: 'palette',
+                office: 'file-alt',
+                game: 'gamepad',
+                security: 'shield-alt',
+                network: 'network-wired'
+            };
+            return icons[category] || 'download';
+        }
+
+        function getCategoryName(category) {
+            const names = {
+                development: '开发工具',
+                design: '设计创意',
+                office: '办公效率',
+                game: '游戏娱乐',
+                security: '安全防护',
+                network: '网络工具'
+            };
+            return names[category] || '其他';
+        }
+
+        function formatDownloadCount(count) {
+            if (!count) return '0';
+            if (count >= 1000000) {
+                return (count / 1000000).toFixed(1) + 'M';
+            } else if (count >= 1000) {
+                return (count / 1000).toFixed(1) + 'K';
+            }
+            return count;
+        }
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                hideAllModals();
+            }
+        });
+    </script>
+</body>
+</html>
